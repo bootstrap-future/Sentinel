@@ -15,6 +15,7 @@
  */
 package com.alibaba.csp.sentinel.dashboard.rule.nacos.gateway.api;
 
+import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiDefinition;
 import com.alibaba.csp.sentinel.dashboard.config.DashboardConfig;
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.gateway.ApiDefinitionEntity;
 import com.alibaba.csp.sentinel.dashboard.rule.DynamicRulePublisher;
@@ -27,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author 我吃稀饭面
@@ -38,7 +40,7 @@ public class GateWayApiNacosPublisher implements DynamicRulePublisher<List<ApiDe
     @Autowired
     private ConfigService configService;
     @Autowired
-    private Converter<List<ApiDefinitionEntity>, String> converter;
+    private Converter<List<ApiDefinition>, String> converter;
 
     @Override
     public void publish(String app, List<ApiDefinitionEntity> rules) throws Exception {
@@ -46,7 +48,9 @@ public class GateWayApiNacosPublisher implements DynamicRulePublisher<List<ApiDe
         if (rules == null) {
             return;
         }
+
+        List<ApiDefinition> rulesAdapter = rules.stream().map(ApiDefinitionEntity::toApiDefinition).collect(Collectors.toList());
         configService.publishConfig(app + NacosConfigUtil.GATEWAY_API_DATA_ID_POSTFIX,
-                DashboardConfig.getNacosGroupId(), converter.convert(rules), ConfigType.JSON.getType());
+                DashboardConfig.getNacosGroupId(), converter.convert(rulesAdapter), ConfigType.JSON.getType());
     }
 }

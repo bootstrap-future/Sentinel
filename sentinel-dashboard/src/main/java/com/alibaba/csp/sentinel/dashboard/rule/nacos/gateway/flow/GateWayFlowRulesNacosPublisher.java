@@ -15,6 +15,7 @@
  */
 package com.alibaba.csp.sentinel.dashboard.rule.nacos.gateway.flow;
 
+import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayFlowRule;
 import com.alibaba.csp.sentinel.dashboard.config.DashboardConfig;
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.gateway.GatewayFlowRuleEntity;
 import com.alibaba.csp.sentinel.dashboard.rule.DynamicRulePublisher;
@@ -27,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author 我吃稀饭面
@@ -38,7 +40,7 @@ public class GateWayFlowRulesNacosPublisher implements DynamicRulePublisher<List
     @Autowired
     private ConfigService configService;
     @Autowired
-    private Converter<List<GatewayFlowRuleEntity>, String> converter;
+    private Converter<List<GatewayFlowRule>, String> converter;
 
     @Override
     public void publish(String app, List<GatewayFlowRuleEntity> rules) throws Exception {
@@ -46,7 +48,9 @@ public class GateWayFlowRulesNacosPublisher implements DynamicRulePublisher<List
         if (rules == null) {
             return;
         }
+        List<GatewayFlowRule> rulesAdapter = rules.stream().map(GatewayFlowRuleEntity::toGatewayFlowRule).collect(Collectors.toList());
+
         configService.publishConfig(app + NacosConfigUtil.GATEWAY_FLOW_DATA_ID_POSTFIX,
-                DashboardConfig.getNacosGroupId(), converter.convert(rules), ConfigType.JSON.getType());
+                DashboardConfig.getNacosGroupId(), converter.convert(rulesAdapter), ConfigType.JSON.getType());
     }
 }

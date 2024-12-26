@@ -15,8 +15,10 @@
  */
 package com.alibaba.csp.sentinel.dashboard.rule.nacos.gateway.api;
 
+import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiDefinition;
 import com.alibaba.csp.sentinel.dashboard.config.DashboardConfig;
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.gateway.ApiDefinitionEntity;
+import com.alibaba.csp.sentinel.dashboard.datasource.entity.gateway.GatewayFlowRuleEntity;
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.DegradeRuleEntity;
 import com.alibaba.csp.sentinel.dashboard.rule.DynamicRuleProvider;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosConfigUtil;
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author 我吃稀饭面
@@ -39,7 +42,7 @@ public class GateWayApiNacosProvider implements DynamicRuleProvider<List<ApiDefi
     @Autowired
     private ConfigService configService;
     @Autowired
-    private Converter<String, List<ApiDefinitionEntity>> converter;
+    private Converter<String, List<ApiDefinition>> converter;
 
     @Override
     public List<ApiDefinitionEntity> getRules(String appName) throws Exception {
@@ -48,8 +51,8 @@ public class GateWayApiNacosProvider implements DynamicRuleProvider<List<ApiDefi
         if (StringUtil.isEmpty(rules)) {
             return new ArrayList<>();
         }
-        List<ApiDefinitionEntity> convert = converter.convert(rules);
-        convert.forEach(e->e.setApp(appName));
-        return convert;
+        List<ApiDefinition> convert = converter.convert(rules);
+        List<ApiDefinitionEntity> rulesAdapter = convert.stream().map(r -> ApiDefinitionEntity.fromApiDefinition(appName, null, null, r)).collect(Collectors.toList());
+        return rulesAdapter;
     }
 }

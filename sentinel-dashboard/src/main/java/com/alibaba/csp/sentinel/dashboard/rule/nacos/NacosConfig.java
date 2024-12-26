@@ -15,6 +15,8 @@
  */
 package com.alibaba.csp.sentinel.dashboard.rule.nacos;
 
+import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiDefinition;
+import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayFlowRule;
 import com.alibaba.csp.sentinel.dashboard.config.DashboardConfig;
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.gateway.ApiDefinitionEntity;
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.gateway.GatewayFlowRuleEntity;
@@ -24,6 +26,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigFactory;
 import com.alibaba.nacos.api.config.ConfigService;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -78,6 +81,16 @@ public class NacosConfig {
     }
 
     @Bean
+    public Converter<List<ApiDefinition>, String> apiDefinitionEncoder() {
+        return JSON::toJSONString;
+    }
+
+    @Bean
+    public Converter<String, List<ApiDefinition>> apiDefinitionDecoder() {
+        return s -> JSON.parseArray(s, ApiDefinition.class);
+    }
+
+    @Bean
     public Converter<List<GatewayFlowRuleEntity>, String> gatewayFlowRuleEntityEncoder() {
         return JSON::toJSONString;
     }
@@ -85,6 +98,16 @@ public class NacosConfig {
     @Bean
     public Converter<String, List<GatewayFlowRuleEntity>> gatewayFlowRuleEntityDecoder() {
         return s -> JSON.parseArray(s, GatewayFlowRuleEntity.class);
+    }
+
+    @Bean
+    public Converter<List<GatewayFlowRule>, String> gatewayFlowRuleEncoder() {
+        return JSON::toJSONString;
+    }
+
+    @Bean
+    public Converter<String, List<GatewayFlowRule>> gatewayFlowRuleDecoder() {
+        return s -> JSON.parseArray(s, GatewayFlowRule.class);
     }
 
     @Bean
@@ -109,9 +132,12 @@ public class NacosConfig {
 
     @Bean
     public ConfigService nacosConfigService() throws Exception {
+        String nacosNamespace = DashboardConfig.getNacosNamespace();
         Properties properties = new Properties();
         properties.put(PropertyKeyConst.SERVER_ADDR, DashboardConfig.getNacosServer());
-        properties.put(PropertyKeyConst.NAMESPACE, DashboardConfig.getNacosNamespace());
+        if (StringUtils.isNotBlank(nacosNamespace)){
+            properties.put(PropertyKeyConst.NAMESPACE, DashboardConfig.getNacosNamespace());
+        }
         properties.put(PropertyKeyConst.USERNAME, DashboardConfig.getNacosUsername());
         properties.put(PropertyKeyConst.PASSWORD, DashboardConfig.getNacosPassword());
         return ConfigFactory.createConfigService(properties);

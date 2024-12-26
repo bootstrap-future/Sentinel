@@ -317,6 +317,7 @@ public class SentinelApiClient {
     
     private CompletableFuture<String> executeCommand(HttpUriRequest request) {
         CompletableFuture<String> future = new CompletableFuture<>();
+        request.setHeader("request_type", "APP_SENTINEL");
         httpClient.execute(request, new FutureCallback<HttpResponse>() {
             @Override
             public void completed(final HttpResponse response) {

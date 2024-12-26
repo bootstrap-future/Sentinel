@@ -15,6 +15,7 @@
  */
 package com.alibaba.csp.sentinel.dashboard.rule.nacos.gateway.flow;
 
+import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayFlowRule;
 import com.alibaba.csp.sentinel.dashboard.config.DashboardConfig;
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.gateway.ApiDefinitionEntity;
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.gateway.GatewayFlowRuleEntity;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author 我吃稀饭面
@@ -39,7 +41,7 @@ public class GateWayFlowRulesNacosProvider implements DynamicRuleProvider<List<G
     @Autowired
     private ConfigService configService;
     @Autowired
-    private Converter<String, List<GatewayFlowRuleEntity>> converter;
+    private Converter<String, List<GatewayFlowRule>> converter;
 
     @Override
     public List<GatewayFlowRuleEntity> getRules(String appName) throws Exception {
@@ -48,8 +50,8 @@ public class GateWayFlowRulesNacosProvider implements DynamicRuleProvider<List<G
         if (StringUtil.isEmpty(rules)) {
             return new ArrayList<>();
         }
-        List<GatewayFlowRuleEntity> convert = converter.convert(rules);
-        convert.forEach(e->e.setApp(appName));
-        return convert;
+        List<GatewayFlowRule> convert = converter.convert(rules);
+        List<GatewayFlowRuleEntity> rulesAdapter = convert.stream().map(r -> GatewayFlowRuleEntity.fromGatewayFlowRule(appName, null, null, r)).collect(Collectors.toList());
+        return rulesAdapter;
     }
 }
